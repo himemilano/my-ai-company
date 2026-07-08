@@ -55,6 +55,7 @@ my_ai_company = Crew(
     tasks=[task1, task2, task3], # コーディング業務を追加
     process=Process.sequential, # PM → ライター → プログラマーの順に連携
     verbose=True,
+    max_rpm=15, # ★この行を付け足す（1分間のリクエスト回数を制限してエラーを防ぐ魔法のプロパティ）
 )
 
 print("🤖 [社長AI] 本日の業務を開始します（3人体制）...")
