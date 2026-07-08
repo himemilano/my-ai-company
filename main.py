@@ -18,7 +18,6 @@ writer = Agent(
     llm="gemini/gemini-2.5-flash",
 )
 
-# ★新入社員：プログラマーを雇用
 coder = Agent(
     role="天才フロントエンドエンジニア",
     goal="仕様書を元に、ブラウザで実際に動くHTML/CSS/JavaScriptのコードを作成する",
@@ -41,23 +40,41 @@ task2 = Task(
     output_file="idea_of_the_day.md",
 )
 
-# ★新しいタスク：アプリを実際に作らせる命令
 task3 = Task(
-    description="ライターが作成した仕様書とPMのアイデアを元に、ブラウザで開くだけで実際に動作するHTML/CSS/JSが1枚にまとまったWebアプリのコードを実装してください。CSSでモダンかつ美しい見た目に装飾し、JSで機能が実際に動くようにしてください。解説などの余計なテキストは一切含めず、純粋なHTMLコードのみを出力ファイルに保存してください。",
-    expected_output="実際に動作する完成されたHTML/CSS/JSのコード（純粋なHTMLファイルの内容のみ、```html などのマークダウン枠は不要）",
+    description="ライターが作成した仕様書とPMのアイデアを元に、ブラウザで開くだけで実際に動作するHTML/CSS/JSが1枚にまとまったWebアプリのコードを実装してください。CSSでモダンかつ美しい見た目に装飾し、JSで機能が実際に動くようにしてください。余計な解説テキストは一切含めず、純粋なHTMLコードのみを出力してください。",
+    expected_output="実際に動作する完成されたHTML/CSS/JSのコード",
     agent=coder,
-    output_file="index.html", # ★ここに完成品アプリが自動納品されます！
+    # ★自動保存はさせず、下のPython処理で綺麗にしてから保存するため、ここでは output_file を指定しません
 )
 
-# 3. チーム結成と実行（3人体制にアップデート）
+# 3. チーム結成と実行
 my_ai_company = Crew(
-    agents=[pm, writer, coder], # プログラマーを追加
-    tasks=[task1, task2, task3], # コーディング業務を追加
-    process=Process.sequential, # PM → ライター → プログラマーの順に連携
+    agents=[pm, writer, coder],
+    tasks=[task1, task2, task3],
+    process=Process.sequential,
     verbose=True,
-    max_rpm=15, # ★この行を付け足す（1分間のリクエスト回数を制限してエラーを防ぐ魔法のプロパティ）
+    max_rpm=15,
 )
 
-print("🤖 [社長AI] 本日の業務を開始します（3人体制）...")
+print("🤖 [社長AI] 本日の業務を開始します...")
 result = my_ai_company.kickoff()
-print("🤖 [社長AI] 本日の業務が完了しました！仕様書とアプリ本体を納品します。")
+
+# ----------------------------------------------------------------
+# ★【新機能】プログラマーが作ったコードから邪魔な「枠（```）」を切り落とす処理
+# ----------------------------------------------------------------
+print("🤖 [社長AI] プログラマーの成果物を検収し、余計なマークダウン枠を削除します...")
+html_content = str(task3.output.raw)
+
+# AIが「```html」や「```」を付けてしまった場合、その中身だけを抜き出す
+if "```html" in html_content:
+    html_content = html_content.split("```html")[1].split("```")[0]
+elif "```" in html_content:
+    html_content = html_content.split("```")[1].split("```")[0]
+
+html_content = html_content.strip()
+
+# 完全に綺麗なHTMLだけを「index.html」として保存する
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("🤖 [社長AI] 本日の業務がすべて完了しました！綺麗なアプリを納品します。")
