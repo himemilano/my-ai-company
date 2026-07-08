@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>どっちもイイ。</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6a89cc;
+            --secondary-color: #f0932b;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --light-text-color: #777;
+            --border-color: #e0e0e0;
+            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --spacing-unit: 1rem;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-medium);
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem var(--spacing-unit);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-image: linear-gradient(135deg, var(--primary-color) 0%, #aab9e1 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            box-shadow: var(--shadow-light);
+        }
+
+        nav.tabs {
+            display: flex;
+            justify-content: space-around;
+            background-color: #f7f9fc;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-button {
+            flex-grow: 1;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--light-text-color);
+            border: none;
+            background: none;
+            transition: all 0.3s ease;
+            position: relative;
+            outline: none;
+        }
+
+        .tab-button:hover:not(.active) {
+            color: var(--primary-color);
+            background-color: #eef1f6;
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .tab-content {
+            padding: 2rem;
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid rgba(106, 137, 204, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        textarea, input[type="text"], select {
+            width: calc(100% - 2rem);
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        textarea:focus, input[type="text"]:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 137, 204, 0.2);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 700;
+            box-shadow: var(--shadow-light);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #5a7bd4;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary:hover {
+            background-color: #e08320;
+        }
+
+        button.danger {
+            background-color: #e74c3c;
+        }
+
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--spacing-unit);
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .result-display {
+            background-color: #e8f0fe;
+            color: var(--primary-color);
+            border: 2px dashed var(--primary-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            word-break: break-word;
+            flex-wrap: wrap;
+        }
+
+        .result-display.empty {
+            color: var(--light-text-color);
+            font-size: 1.2rem;
+        }
+
+        .genre-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .genre-controls > * {
+            flex-grow: 1;
+            min-width: 150px;
+        }
+
+        .genre-choices-management {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .genre-choices-list {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fcfcfc;
+        }
+
+        .genre-choices-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .genre-choices-list li:last-child {
+            border-bottom: none;
+        }
+
+        .genre-choices-list li .choice-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .genre-choices-list li .choice-actions button {
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            padding: 0.2rem 0.4rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            box-shadow: none;
+            transform: none;
+        }
+        .genre-choices-list li .choice-actions button:hover {
+            color: var(--primary-color);
+            background: none;
+            transform: none;
+        }
+        .genre-choices-list li .choice-actions button.delete:hover {
+            color: #e74c3c;
+        }
+
+
+        .log-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-list li {
+            background-color: #f7f9fc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-light);
+        }
+
+        .log-list li span.date {
+            font-size: 0.9rem;
+            color: var(--light-text-color);
+            min-width: 90px;
+            flex-shrink: 0;
+            margin-right: 1rem;
+        }
+
+        .log-list li span.choice {
+            font-weight: 500;
+            color: var(--text-color);
+            flex-grow: 1;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading animation for decision */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading.result-display {
+            animation: spin 1s infinite linear;
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .loading.result-display::before {
+            content: '思考中...';
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 1rem 0.5rem;
+            }
+            header {
+                font-size: 1.5rem;
+                padding: 1rem 1.5rem;
+            }
+            .tab-button {
+                font-size: 0.85rem;
+                padding: 0.8rem 0.2rem;
+            }
+            .tab-content {
+                padding: 1.5rem;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            .button-group {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+            .genre-controls {
+                flex-direction: column;
+            }
+            .result-display {
+                font-size: 1.5rem;
+                padding: 1.5rem;
+            }
+            .log-list li {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.8rem 1rem;
+            }
+            .log-list li span.date {
+                margin-bottom: 0.3rem;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>どっちもイイ。</h1>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="quick-decision">今日の選択</button>
+            <button class="tab-button" data-tab="genre-generator">ジャンル別提案</button>
+            <button class="tab-button" data-tab="log">選択の足跡</button>
+        </nav>
+
+        <main>
+            <!-- 今日の選択: クイック決断アシスト -->
+            <section id="quick-decision" class="tab-content active">
+                <h2>今日の選択：クイック決断</h2>
+                <p>迷っている選択肢を改行区切りで入力してください。</p>
+                <textarea id="quick-choices-input" rows="6" placeholder="例：&#10;ランチ: ラーメン&#10;ランチ: パスタ&#10;ランチ: カレー&#10;今日の休憩: コーヒー&#10;今日の休憩: 紅茶"></textarea>
+
+                <div class="button-group">
+                    <button id="decide-button">決めて！</button>
+                    <button id="redecide-button" class="secondary" style="display: none;">もう一度</button>
+                    <button id="confirm-decision-button" style="display: none;">これで決定</button>
+                </div>
+
+                <div id="quick-decision-result" class="result-display empty">
+                    ここに今日の選択肢が表示されます
+                </div>
+            </section>
+
+            <!-- ジャンル別: ランダム提案ジェネレーター -->
+            <section id="genre-generator" class="tab-content">
+                <h2>ジャンル別：ランダム提案</h2>
+                <p>ジャンルを選んで、選択肢を提案してもらいましょう。</p>
+
+                <div class="genre-controls">
+                    <select id="genre-select">
+                        <!-- Options will be dynamically loaded here -->
+                    </select>
+                    <input type="text" id="new-genre-input" placeholder="新しいジャンル名">
+                    <button id="add-genre-button">ジャンル追加</button>
+                </div>
+
+                <div class="genre-choices-management">
+                    <label for="current-genre-choice-input">選択肢を編集</label>
+                    <input type="text" id="current-genre-choice-input" placeholder="選択肢を入力して追加">
+                    <div class="button-group">
+                        <button id="add-choice-to-genre-button">選択肢を追加</button>
+                        <button id="save-edited-choice-button" style="display:none;">選択肢を保存</button>
+                        <button id="cancel-edit-choice-button" class="danger" style="display:none;">編集キャンセル</button>
+                    </div>
+
+                    <ul id="genre-choices-list" class="genre-choices-list">
+                        <!-- Choices for the selected genre will be dynamically loaded here -->
+                        <li class="empty-list-item">選択肢を追加してください</li>
+                    </ul>
+                </div>
+                <button id="generate-genre-choice-button">提案！</button>
+                <div id="genre-generator-result" class="result-display empty">
+                    ここに提案が表示されます
+                </div>
+            </section>
+
+            <!-- 選択の足跡: シンプルログ -->
+            <section id="log" class="tab-content">
+                <h2>選択の足跡：シンプルログ</h2>
+                <p>これまでのあなたの決断です。</p>
+                <ul id="decision-log-list" class="log-list">
+                    <!-- Logs will be dynamically loaded here -->
+                    <li class="empty-list-item">まだ決断が記録されていません</li>
+                </ul>
+                <div class="button-group">
+                    <button id="clear-log-button" class="danger">ログを全削除</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- Utility Functions for LocalStorage ---
+        const LS_KEY_QUICK_CHOICES = 'quickChoices';
+        const LS_KEY_GENRE_DATA = 'genreData';
+        const LS_KEY_DECISION_LOG = 'decisionLog';
+        const LS_KEY_SELECTED_GENRE = 'selectedGenre'; // To persist selected genre
+
+        const loadFromLS = (key, defaultValue) => {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : defaultValue;
+            } catch (e) {
+                console.error(`Error loading from LocalStorage for key "${key}":`, e);
+                return defaultValue;
+            }
+        };
+
+        const saveToLS = (key, data) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error(`Error saving to LocalStorage for key "${key}":`, e);
+            }
+        };
+
+        // --- Global Elements ---
+        const tabsContainer = document.querySelector('.tabs');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // --- Quick Decision Elements ---
+        const quickChoicesInput = document.getElementById('quick-choices-input');
+        const decideButton = document.getElementById('decide-button');
+        const redecideButton = document.getElementById('redecide-button');
+        const confirmDecisionButton = document.getElementById('confirm-decision-button');
+        const quickDecisionResult = document.getElementById('quick-decision-result');
+
+        let currentQuickDecision = ''; // To store the result before confirmation
+
+        // --- Genre Generator Elements ---
+        const genreSelect = document.getElementById('genre-select');
+        const newGenreInput = document.getElementById('new-genre-input');
+        const addGenreButton = document.getElementById('add-genre-button');
+        const currentGenreChoiceInput = document.getElementById('current-genre-choice-input');
+        const addChoiceToGenreButton = document.getElementById('add-choice-to-genre-button');
+        const saveEditedChoiceButton = document.getElementById('save-edited-choice-button');
+        const cancelEditChoiceButton = document.getElementById('cancel-edit-choice-button');
+        const genreChoicesList = document.getElementById('genre-choices-list');
+        const generateGenreChoiceButton = document.getElementById('generate-genre-choice-button');
+        const genreGeneratorResult = document.getElementById('genre-generator-result');
+
+        let genreData = {}; // Stores all genres and their choices
+        let editingChoiceIndex = -1; // -1 means no choice is being edited
+
+        // --- Log Elements ---
+        const decisionLogList = document.getElementById('decision-log-list');
+        const clearLogButton = document.getElementById('clear-log-button');
+
+        let decisionLogs = []; // Stores the log entries
+
+        // --- Initial Data Setup ---
+        const defaultGenreData = {
+            "今日の気分": ["映画鑑賞", "読書", "散歩", "仮眠", "軽食", "瞑想", "カフェに行く"],
+            "夕食のメイン": ["ラーメン", "パスタ", "カレー", "焼肉", "寿司", "丼物", "鍋料理"],
+            "週末の過ごし方": ["映画鑑賞", "読書", "散歩", "友人と会う", "家でゴロゴロ", "カフェ巡り", "美術館"],
+        };
+        genreData = loadFromLS(LS_KEY_GENRE_DATA, defaultGenreData);
+        decisionLogs = loadFromLS(LS_KEY_DECISION_LOG, []);
+        quickChoicesInput.value = loadFromLS(LS_KEY_QUICK_CHOICES, '');
+
+        // --- Tab Switching Logic ---
+        tabsContainer.addEventListener('click', (event) => {
+            const clickedButton = event.target.closest('.tab-button');
+            if (!clickedButton) return;
+
+            tabButtons.forEach(button => button.classList.remove('active'));
+            clickedButton.classList.add('active');
+
+            tabContents.forEach(content => content.classList.remove('active'));
+            document.getElementById(clickedButton.dataset.tab).classList.add('active');
+
+            // Specific refresh actions for tabs
+            if (clickedButton.dataset.tab === 'genre-generator') {
+                renderGenreSelect();
+                renderGenreChoices();
+                genreGeneratorResult.textContent = 'ここに提案が表示されます';
+                genreGeneratorResult.classList.add('empty');
+                resetGenreChoiceInput();
+            } else if (clickedButton.dataset.tab === 'log') {
+                renderDecisionLogs();
+            } else if (clickedButton.dataset.tab === 'quick-decision') {
+                quickDecisionResult.textContent = 'ここに今日の選択肢が表示されます';
+                quickDecisionResult.classList.add('empty');
+                redecideButton.style.display = 'none';
+                confirmDecisionButton.style.display = 'none';
+                currentQuickDecision = '';
+            }
+        });
+
+        // --- Quick Decision Logic ---
+        const getQuickChoices = () => quickChoicesInput.value.split('\n').map(c => c.trim()).filter(c => c !== '');
+
+        const displayQuickDecisionResult = (choice) => {
+            quickDecisionResult.classList.remove('loading', 'empty');
+            quickDecisionResult.textContent = choice;
+            currentQuickDecision = choice;
+            redecideButton.style.display = 'inline-flex';
+            confirmDecisionButton.style.display = 'inline-flex';
+        };
+
+        const makeQuickDecision = () => {
+            const choices = getQuickChoices();
+            if (choices.length === 0) {
+                alert('選択肢を入力してください！');
+                return;
+            }
+            quickDecisionResult.classList.add('loading');
+            quickDecisionResult.textContent = ''; // Clear text content during loading
+            redecideButton.style.display = 'none';
+            confirmDecisionButton.style.display = 'none';
+
+            setTimeout(() => { // Simulate a brief 'thinking' time
+                const chosen = choices[Math.floor(Math.random() * choices.length)];
+                displayQuickDecisionResult(chosen);
+            }, 800);
+        };
+
+        decideButton.addEventListener('click', makeQuickDecision);
+        redecideButton.addEventListener('click', makeQuickDecision);
+
+        quickChoicesInput.addEventListener('input', () => {
+            saveToLS(LS_KEY_QUICK_CHOICES, quickChoicesInput.value);
+            // Reset state if input changes after a decision
+            if (currentQuickDecision) {
+                quickDecisionResult.textContent = 'ここに今日の選択肢が表示されます';
+                quickDecisionResult.classList.add('empty');
+                redecideButton.style.display = 'none';
+                confirmDecisionButton.style.display = 'none';
+                currentQuickDecision = '';
+            }
+        });
+
+        confirmDecisionButton.addEventListener('click', () => {
+            if (currentQuickDecision) {
+                const now = new Date();
+                const dateString = now.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/');
+                decisionLogs.unshift({ date: dateString, choice: currentQuickDecision });
+                saveToLS(LS_KEY_DECISION_LOG, decisionLogs);
+                renderDecisionLogs(); // Refresh log tab content if active
+
+                alert(`「${currentQuickDecision}」をログに記録しました！`);
+
+                // Reset quick decision UI
+                quickDecisionResult.textContent = 'ここに今日の選択肢が表示されます';
+                quickDecisionResult.classList.add('empty');
+                redecideButton.style.display = 'none';
+                confirmDecisionButton.style.display = 'none';
+                currentQuickDecision = '';
+            }
+        });
+
+        // --- Genre Generator Logic ---
+        const renderGenreSelect = () => {
+            genreSelect.innerHTML = '';
+            const genres = Object.keys(genreData);
+            if (genres.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'ジャンルがありません';
+                genreSelect.appendChild(option);
+                genreSelect.disabled = true;
+                addChoiceToGenreButton.disabled = true;
+                generateGenreChoiceButton.disabled = true;
+                currentGenreChoiceInput.disabled = true;
+                return;
+            }
+            genreSelect.disabled = false;
+            addChoiceToGenreButton.disabled = false;
+            generateGenreChoiceButton.disabled = false;
+            currentGenreChoiceInput.disabled = false;
+
+            const savedSelectedGenre = loadFromLS(LS_KEY_SELECTED_GENRE, genres[0]);
+            let foundSavedGenre = false;
+
+            genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre;
+                option.textContent = genre;
+                genreSelect.appendChild(option);
+                if (genre === savedSelectedGenre) {
+                    option.selected = true;
+                    foundSavedGenre = true;
+                }
+            });
+
+            if (!foundSavedGenre && genres.length > 0) {
+                genreSelect.value = genres[0]; // Select the first genre if saved one is not found
+                saveToLS(LS_KEY_SELECTED_GENRE, genres[0]);
+            } else if (genres.length === 0) {
+                genreSelect.value = '';
+            }
+            renderGenreChoices();
+        };
+
+        const renderGenreChoices = () => {
+            genreChoicesList.innerHTML = '';
+            const selectedGenre = genreSelect.value;
+            const choices = genreData[selectedGenre] || [];
+
+            if (choices.length === 0) {
+                const li = document.createElement('li');
+                li.classList.add('empty-list-item');
+                li.textContent = '選択肢を追加してください';
+                genreChoicesList.appendChild(li);
+                return;
+            }
+
+            choices.forEach((choice, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${choice}</span>
+                    <div class="choice-actions">
+                        <button class="edit-choice" data-index="${index}">編集</button>
+                        <button class="delete-choice danger" data-index="${index}">削除</button>
+                    </div>
+                `;
+                genreChoicesList.appendChild(li);
+            });
+        };
+
+        genreSelect.addEventListener('change', () => {
+            saveToLS(LS_KEY_SELECTED_GENRE, genreSelect.value);
+            renderGenreChoices();
+            resetGenreChoiceInput();
+        });
+
+        addGenreButton.addEventListener('click', () => {
+            const newGenreName = newGenreInput.value.trim();
+            if (newGenreName && !genreData[newGenreName]) {
+                genreData[newGenreName] = [];
+                saveToLS(LS_KEY_GENRE_DATA, genreData);
+                newGenreInput.value = '';
+                renderGenreSelect();
+                genreSelect.value = newGenreName; // Select the newly added genre
+                saveToLS(LS_KEY_SELECTED_GENRE, newGenreName);
+                renderGenreChoices();
+            } else if (newGenreName && genreData[newGenreName]) {
+                alert('そのジャンルは既に存在します。');
+            } else {
+                alert('新しいジャンル名を入力してください。');
+            }
+        });
+
+        const resetGenreChoiceInput = () => {
+            currentGenreChoiceInput.value = '';
+            editingChoiceIndex = -1;
+            addChoiceToGenreButton.style.display = 'inline-flex';
+            saveEditedChoiceButton.style.display = 'none';
+            cancelEditChoiceButton.style.display = 'none';
+        };
+
+        addChoiceToGenreButton.addEventListener('click', () => {
+            const selectedGenre = genreSelect.value;
+            const newChoice = currentGenreChoiceInput.value.trim();
+            if (!selectedGenre) {
+                alert('ジャンルを選択または追加してください。');
+                return;
+            }
+            if (newChoice) {
+                if (!genreData[selectedGenre]) {
+                    genreData[selectedGenre] = [];
+                }
+                if (!genreData[selectedGenre].includes(newChoice)) { // Prevent duplicates
+                    genreData[selectedGenre].push(newChoice);
+                    saveToLS(LS_KEY_GENRE_DATA, genreData);
+                    currentGenreChoiceInput.value = '';
+                    renderGenreChoices();
+                } else {
+                    alert('この選択肢は既に存在します。');
+                }
+            } else {
+                alert('選択肢を入力してください。');
+            }
+        });
+
+        genreChoicesList.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('edit-choice')) {
+                const index = parseInt(target.dataset.index);
+                const selectedGenre = genreSelect.value;
+                currentGenreChoiceInput.value = genreData[selectedGenre][index];
+                editingChoiceIndex = index;
+                addChoiceToGenreButton.style.display = 'none';
+                saveEditedChoiceButton.style.display = 'inline-flex';
+                cancelEditChoiceButton.style.display = 'inline-flex';
+            } else if (target.classList.contains('delete-choice')) {
+                const index = parseInt(target.dataset.index);
+                const selectedGenre = genreSelect.value;
+                if (confirm('この選択肢を削除してもよろしいですか？')) {
+                    genreData[selectedGenre].splice(index, 1);
+                    saveToLS(LS_KEY_GENRE_DATA, genreData);
+                    renderGenreChoices();
+                    resetGenreChoiceInput();
+                }
+            }
+        });
+
+        saveEditedChoiceButton.addEventListener('click', () => {
+            const selectedGenre = genreSelect.value;
+            const updatedChoice = currentGenreChoiceInput.value.trim();
+            if (updatedChoice && editingChoiceIndex !== -1) {
+                // Check for duplicates, excluding the item being edited itself
+                const existingChoices = genreData[selectedGenre].filter((_, i) => i !== editingChoiceIndex);
+                if (existingChoices.includes(updatedChoice)) {
+                    alert('この選択肢は既に存在します。');
+                    return;
+                }
+                genreData[selectedGenre][editingChoiceIndex] = updatedChoice;
+                saveToLS(LS_KEY_GENRE_DATA, genreData);
+                renderGenreChoices();
+                resetGenreChoiceInput();
+            } else {
+                alert('選択肢を入力してください。');
+            }
+        });
+
+        cancelEditChoiceButton.addEventListener('click', resetGenreChoiceInput);
+
+
+        generateGenreChoiceButton.addEventListener('click', () => {
+            const selectedGenre = genreSelect.value;
+            if (!selectedGenre) {
+                alert('ジャンルを選択してください！');
+                return;
+            }
+            const choices = genreData[selectedGenre] || [];
+            if (choices.length === 0) {
+                alert('このジャンルには選択肢が登録されていません。追加してください。');
+                return;
+            }
+
+            genreGeneratorResult.classList.add('loading');
+            genreGeneratorResult.textContent = ''; // Clear text content during loading
+
+            setTimeout(() => { // Simulate a brief 'thinking' time
+                const chosen = choices[Math.floor(Math.random() * choices.length)];
+                genreGeneratorResult.classList.remove('loading', 'empty');
+                genreGeneratorResult.textContent = chosen;
+            }, 800);
+        });
+
+        // --- Decision Log Logic ---
+        const renderDecisionLogs = () => {
+            decisionLogList.innerHTML = '';
+            if (decisionLogs.length === 0) {
+                const li = document.createElement('li');
+                li.classList.add('empty-list-item');
+                li.textContent = 'まだ決断が記録されていません';
+                decisionLogList.appendChild(li);
+                return;
+            }
+
+            decisionLogs.forEach(log => {
+                const li = document.createElement('li');
+                const dateSpan = document.createElement('span');
+                dateSpan.classList.add('date');
+                dateSpan.textContent = log.date;
+                const choiceSpan = document.createElement('span');
+                choiceSpan.classList.add('choice');
+                choiceSpan.textContent = log.choice;
+
+                li.appendChild(dateSpan);
+                li.appendChild(choiceSpan);
+                decisionLogList.appendChild(li);
+            });
+        };
+
+        clearLogButton.addEventListener('click', () => {
+            if (confirm('全てのログを削除してもよろしいですか？この操作は元に戻せません。')) {
+                decisionLogs = [];
+                saveToLS(LS_KEY_DECISION_LOG, decisionLogs);
+                renderDecisionLogs();
+            }
+        });
+
+        // --- Initial Render on Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render initial states
+            renderGenreSelect();
+            renderDecisionLogs();
+            // Ensure first tab is active
+            document.querySelector('.tab-button').click();
+        });
+    </script>
+</body>
+</html>
