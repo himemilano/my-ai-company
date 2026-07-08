@@ -21,7 +21,7 @@ jobs:
 
       - name: 3. 必要ツールのインストール
         run: |
-          pip install crewai
+          pip install "crewai[google-genai]"
 
       - name: 4. AI社員の業務実行
         env:
