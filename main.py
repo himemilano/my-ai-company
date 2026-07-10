@@ -1,80 +1,112 @@
+
 import os
+import json
+from datetime import datetime, timedelta, timezone
 from crewai import Agent, Crew, Process, Task
 
-# 1. エージェント（AI社員）の設定
-pm = Agent(
-    role="敏腕プロダクトマネージャー",
-    goal="日常のちょっとした悩みを解決する、面白いWebアプリのアイデアを1つ考案する",
-    backstory="あなたは数々のヒットアプリを生み出してきた天才PMです。斬新かつ、ブラウザだけで動くシンプルなアプリを考えるのが得意です。",
+# --- ⚙️ タイムゾーンと日付の設定 ---
+jst = timezone(timedelta(hours=9))
+now = datetime.now(jst)
+current_date = now.strftime("%Y-%m-%d")
+
+# フォルダの作成
+os.makedirs("outputs/dev_logs", exist_ok=True)
+STATE_FILE = "outputs/dev_logs/development_state.json"
+
+# --- 📋 開発ステータス（引き継ぎ帳）の管理 ---
+def load_state():
+    if os.path.exists(STATE_FILE):
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "current_app": "地質調査技士試験対策アプリ",
+        "status": "ANALYZING_EXISTING_CODE",
+        "current_phase": "前任者のDartコードと仕様書の分析",
+        "completed_features": [],
+        "next_target_screen": "未定（初回分析後に決定）",
+        "history": []
+    }
+
+def save_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=4)
+
+state = load_state()
+
+# --- 💻 アプリ開発部のAIスペシャリスト（エージェント定義） ---
+
+dev_pm = Agent(
+    role="アプリ開発総括 PM 兼 COO",
+    goal="アップロードされた仕様書(.md)と既存のDartコードを読み解き、ストア申請に向けて毎日1つずつ確実に機能を完成させる",
+    backstory="プロジェクト全体の進捗（バックログ）を管理する冷徹なマネージャー。Geminiの無料枠を意識し、一度に多くの開発を詰め込まず、今日の開発目標を1つに絞り込むプロ。",
     verbose=True,
     llm="gemini/gemini-2.5-flash",
 )
 
-writer = Agent(
-    role="テクニカルライター",
-    goal="PMが出したアイデアを整理し、エンジニアがすぐ開発できるMarkdown仕様書を作成する",
-    backstory="あなたは分かりやすく美しい構成で技術ドキュメントを書くプロフェッショナルです。",
+flutter_engineer = Agent(
+    role="シニア Flutter/Dart 開発エンジニア",
+    goal="PMの指示に基づき、地質調査技士アプリの.dartファイルや.json設定ファイルを拡張・修正・新規作成する",
+    backstory="FlutterとDart言語の申し子。マテリアルデザインに精通し、国家資格の過去問データやポケットブックの知識をクリーンなソースコードとして実装する技術者。",
     verbose=True,
     llm="gemini/gemini-2.5-flash",
 )
 
-coder = Agent(
-    role="天才フロントエンドエンジニア",
-    goal="仕様書を元に、ブラウザで実際に動くHTML/CSS/JavaScriptのコードを作成する",
-    backstory="あなたは見た目が美しく、1ファイル（HTMLファイル1枚）で完結するインタラクティブなWebアプリを組み上げる天才プログラマーです。デザインセンスも抜群です。",
+store_qa_specialist = Agent(
+    role="ストア申請 兼 QA（品質保証）責任者",
+    goal="書かれたコードに致命的なバグがないか、またApple/Googleのストア審査（ガイドライン）を突破できる構成かを検証する",
+    backstory="数々のアプリを両OSのストアに一発合格させてきた伝説のQA。ユーザーが使いやすいか、規約違反がないかを厳しくテストし、本日の成果物を最終承認する砦。",
     verbose=True,
     llm="gemini/gemini-2.5-flash",
 )
 
-# 2. タスク（業務命令）の定義
+# --- 🚀 開発フェーズに応じたタスクの自動生成 ---
+tasks = []
+
+# リポジトリ内の情報をAIに教えるための簡易コンテキスト
+spec_info = "リポジトリ内にある、会長がアップロードした仕様書(.mdファイル)を最優先で確認してください。"
+
 task1 = Task(
-    description="現代人が日常で抱える小さなストレスを解消する、ブラウザで動くミニマルなWebアプリのアイデアを1つ考えてください。",
-    expected_output="アプリ名、ターゲット層、解決する悩み、主な機能3つ",
-    agent=pm,
+    description=f"{spec_info} 現在の開発ステート（{state['current_phase']}）を確認し、本日開発・修正すべき『具体的なFlutterの1画面、または1機能』を決定してください。",
+    expected_output="本日の開発仕様指示書",
+    agent=dev_pm
 )
 
 task2 = Task(
-    description="PMのアイデアを元に、実装計画書（仕様書）をMarkdown形式で記述してください。ファイルに保存できるよう美しく整形してください。",
-    expected_output="Markdown形式のアプリ仕様書テキスト",
-    agent=writer,
-    output_file="idea_of_the_day.md",
+    description="PMの指示とアップロード済みの既存コードを確認し、地質調査技士アプリに必要なDartコード（またはJSON等の設定）を実装・修正してください。コードは省略せず、再利用可能な形で記述すること。",
+    expected_output="実装または修正されたDart/JSONコード一式",
+    agent=flutter_engineer
 )
 
 task3 = Task(
-    description="ライターが作成した仕様書とPMのアイデアを元に、ブラウザで開くだけで実際に動作するHTML/CSS/JSが1枚にまとまったWebアプリのコードを実装してください。CSSでモダンかつ美しい見た目に装飾し、JSで機能が実際に動くようにしてください。余計な解説テキストは一切含めず、純粋なHTMLコードのみを出力してください。",
-    expected_output="実際に動作する完成されたHTML/CSS/JSのコード",
-    agent=coder,
-    # ★自動保存はさせず、下のPython処理で綺麗にしてから保存するため、ここでは output_file を指定しません
+    description="実装されたコードをレビューし、構図の破綻がないか、将来的なiOS/Androidのストア申請規約（App Store Reviewガイドライン等）に準拠しているか品質チェックを行ってください。また、次回の出勤メンバーへの『明日の引き継ぎ事項』をまとめてください。",
+    expected_output="QA合格承認ログおよび明日への引き継ぎメモ",
+    agent=store_qa_specialist
 )
 
-# 3. チーム結成と実行
-my_ai_company = Crew(
-    agents=[pm, writer, coder],
-    tasks=[task1, task2, task3],
+tasks = [task1, task2, task3]
+
+# --- 🌐 チーム結成と実行（Gemini無料枠セーフティ完備） ---
+dev_crew = Crew(
+    agents=[dev_pm, flutter_engineer, store_qa_specialist],
+    tasks=tasks,
     process=Process.sequential,
     verbose=True,
-    max_rpm=15,
+    max_rpm=10  # 🔥 Gemini無料枠（15RPM）を絶対に突破しない安全ブレーキ
 )
 
-print("🤖 [社長AI] 本日の業務を開始します...")
-result = my_ai_company.kickoff()
+print(f"📱 [ai-company] {state['current_app']} の自律開発を開始します。現在のフェーズ: {state['current_phase']}")
+result = dev_crew.kickoff()
 
-# ----------------------------------------------------------------
-# ★【新機能】プログラマーが作ったコードから邪魔な「枠（```）」を切り落とす処理
-# ----------------------------------------------------------------
-print("🤖 [社長AI] プログラマーの成果物を検収し、余計なマークダウン枠を削除します...")
-html_content = str(task3.output.raw)
+# 成果（本日の開発日報・コードスニペット）の保存
+log_folder = "outputs/dev_logs"
+report_file = f"{log_folder}/{current_date}_development_report.md"
 
-# AIが「```html」や「```」を付けてしまった場合、その中身だけを抜き出す
-if "```html" in html_content:
-    html_content = html_content.split("```html")[1].split("```")[0]
-elif "```" in html_content:
-    html_content = html_content.split("```")[1].split("```")[0]
+with open(report_file, "w", encoding="utf-8") as f:
+    f.write(str(result))
 
-html_content = html_content.strip()
+# 次回に向けてステートを更新（モック更新：実際はAIの出力を元にPMが次回フェーズを決定するよう促す）
+state["status"] = "CODING_PHASE"
+state["current_phase"] = "仕様書に基づく機能の順次実装フェーズ"
+save_state(state)
 
-# 完全に綺麗なHTMLだけを「index.html」として保存する
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("🤖 [社長AI] 本日の業務がすべて完了しました！綺麗なアプリを納品します。")
+print(f"💾 [ai-company] 今日の業務が完了しました。成果物: {report_file}")
