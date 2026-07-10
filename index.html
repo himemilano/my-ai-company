@@ -3,440 +3,671 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClarityPad</title>
+    <title>Tab-Zen</title>
     <style>
-        /* CSS Variables for easy customization */
         :root {
-            --text-color: #333333;
-            --bg-color: #FFFFFF;
-            --subtle-text-color: #A0A0A0;
-            --control-bg-color: rgba(255, 255, 255, 0.9);
-            --control-border-color: #E0E0E0;
-            --control-icon-color: #666666;
-            --control-hover-color: #007bff;
-            --transition-duration: 0.3s; /* For fade animations */
-            --prompt-delay: 50s; /* Time before prompt appears (45s-60s) */
-            --prompt-display-time: 12s; /* How long prompt stays visible (10s-15s) */
-            --controls-show-delay: 0.2s; /* Delay for controls to appear on hover/Alt */
-            --controls-hide-delay: 0.5s; /* Delay for controls to disappear */
-            --padding-size: 2rem;
+            --bg-color: #F8F8F8;
+            --text-color: #333;
+            --primary-color: #4CAF50; /* Green */
+            --primary-hover-color: #45a049;
+            --secondary-color: #007bff; /* Blue */
+            --secondary-hover-color: #0069d9;
+            --card-bg: #fff;
+            --border-color: #ddd;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --focus-border: #80bdff;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
         }
 
-        /* Basic Reset & Body Styling */
         body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            overflow: hidden; /* Prevent body scroll, textarea handles its own */
-            height: 100vh;
-            display: flex; /* Flexbox for full height textarea */
-            flex-direction: column;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent scrollbar for the entire body */
         }
 
-        /* Textarea Styling - The "Thinking Sandbox" */
-        textarea#clarityPad {
-            flex-grow: 1; /* Make textarea fill available vertical space */
-            width: calc(100% - (var(--padding-size) * 2)); /* Full width minus padding */
-            height: calc(100% - (var(--padding-size) * 2)); /* Full height minus padding */
-            padding: var(--padding-size);
-            box-sizing: border-box; /* Include padding in width/height */
-            border: none;
-            outline: none; /* Remove focus outline, customize if needed for accessibility */
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-size: 1.15rem; /* Readable font size (~18px-20px) */
-            line-height: 1.6; /* Ample line height for readability */
-            resize: none; /* Disable manual resizing */
-            white-space: pre-wrap; /* Preserve whitespace and wrap text naturally */
-            word-wrap: break-word; /* Break long words to prevent overflow */
-            overflow-y: auto; /* Show vertical scrollbar only when content overflows */
-        }
-
-        /* Placeholder text style */
-        textarea#clarityPad::placeholder {
-            color: var(--subtle-text-color);
-            opacity: 0.6;
-        }
-
-        /* Prompt Assist Styling */
-        .prompt {
-            position: fixed;
-            bottom: 3rem; /* Position above controls when they appear */
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--subtle-text-color);
-            font-size: 0.9rem;
-            opacity: 0;
-            pointer-events: none; /* Allow clicks/interactions to pass through */
-            transition: opacity var(--transition-duration) ease-in-out;
-            padding: 0.5rem 1rem;
-            background-color: var(--bg-color); /* Matches body for seamless look */
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
-            z-index: 10; /* Stacking order */
-            white-space: nowrap; /* Keep prompt on a single line */
-        }
-
-        .prompt.prompt-visible {
-            opacity: 1;
-        }
-
-        /* Controls Bar Styling (Export & Reset) */
-        .controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
+        #app {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            padding: 40px;
             width: 100%;
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            box-sizing: border-box;
+            max-height: 95vh;
+            overflow-y: auto; /* Allow app content to scroll if needed */
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .screen.active {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1.5rem; /* Space between buttons */
-            padding: 0.8rem 0;
-            background-color: var(--control-bg-color);
-            border-top: 1px solid var(--control-border-color);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
-            opacity: 0;
-            pointer-events: none; /* Hide interaction until visible */
-            transition: opacity var(--transition-duration) ease-in-out;
-            z-index: 20; /* Stacking order */
         }
 
-        .controls.controls-visible {
-            opacity: 1;
-            pointer-events: auto; /* Enable interaction when visible */
+        h1, h2, h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            font-weight: 600;
         }
 
-        .control-button {
-            background: none;
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
             border: none;
-            color: var(--control-icon-color);
-            font-size: 1.1rem; /* Icon size */
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 1.1em;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 4px;
-            transition: color var(--transition-duration) ease, background-color var(--transition-duration) ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .small-button {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            background-color: #6c757d; /* Grey for exit button */
+        }
+        .small-button:hover {
+             background-color: #5a6268;
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Segoe UI Mono', 'Consolas', monospace;
+            font-size: 1em;
+            resize: vertical;
+            min-height: 80px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--focus-border);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: left;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            margin-bottom: 20px; /* Space between cards */
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #zen-screen header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #zen-screen header h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        /* Scratchpad specific styles */
+        #scratchpad-section textarea {
+            min-height: 150px;
+            width: 100%;
+        }
+
+        /* Timer specific styles */
+        .timer-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        #timer-mode {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        #timer-value {
+            font-size: 4em;
+            font-weight: bold;
+            color: var(--text-color);
+            font-variant-numeric: tabular-nums; /* Align numbers */
+            letter-spacing: -2px;
+            background: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .timer-controls {
+            display: flex;
             justify-content: center;
-            gap: 0.5rem; /* Space between icon and text label */
+            gap: 15px;
         }
 
-        .control-button:hover {
-            color: var(--control-hover-color);
-            background-color: rgba(0, 123, 255, 0.05); /* Subtle hover background */
+        .timer-controls button {
+            padding: 12px 25px;
+            font-size: 1em;
+            box-shadow: none; /* Override default button shadow for cleaner look */
+        }
+        .timer-controls button#start-timer { background-color: var(--primary-color); }
+        .timer-controls button#start-timer:hover { background-color: var(--primary-hover-color); }
+        .timer-controls button#pause-timer { background-color: var(--secondary-color); }
+        .timer-controls button#pause-timer:hover { background-color: var(--secondary-hover-color); }
+        .timer-controls button#reset-timer { background-color: #6c757d; }
+        .timer-controls button#reset-timer:hover { background-color: #5a6268; }
+
+        /* Timer mode specific colors */
+        .timer-display.working #timer-value {
+            color: var(--primary-color);
+        }
+        .timer-display.breaking #timer-value {
+            color: var(--secondary-color);
+        }
+        .timer-display.long-breaking #timer-value {
+            color: #dc3545; /* Red for long break */
         }
 
-        .control-button span {
-            font-size: 0.85rem; /* Text label size */
+        /* Collapsible section for restore tabs */
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3em;
+            padding: 10px 0;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            transition: color 0.2s ease;
+        }
+        .collapsible-header:hover {
+            color: var(--secondary-hover-color);
+        }
+        .collapsible-header .toggle-icon {
+            margin-left: 10px;
+            transition: transform 0.2s ease;
+        }
+        .collapsible.expanded .collapsible-header .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .collapsible.expanded .collapsible-content {
+            max-height: 500px; /* Arbitrary large value to allow content to expand */
+            padding-bottom: 15px;
+        }
+        #restore-tabs-section textarea {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        #restore-tabs-section button {
+            width: 100%;
+            background-color: var(--secondary-color);
+        }
+        #restore-tabs-section button:hover {
+            background-color: var(--secondary-hover-color);
         }
 
-        /* Notification Styling (e.g., "Copied!") */
-        .notification {
-            position: fixed;
-            bottom: 7rem; /* Position above prompt and controls */
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: #FFFFFF;
-            padding: 0.6rem 1.2rem;
-            border-radius: 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-duration) ease-in-out;
-            z-index: 30; /* Stacking order */
-            font-size: 0.9rem;
-            white-space: nowrap;
+        /* Intro Screen Specifics */
+        #intro-screen {
+            gap: 20px;
+        }
+        #intro-screen h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+        #intro-screen p {
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1.1em;
+            color: #555;
+        }
+        #intro-screen #enter-zen-mode {
+            margin-top: 20px;
+            font-size: 1.3em;
+            padding: 18px 35px;
+        }
+        .save-tabs-section {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        .save-tabs-section p {
+            font-size: 0.95em;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .save-tabs-section textarea {
+            background-color: #f8f9fa;
+        }
+        .save-tabs-section button {
+            background-color: #6c757d;
+            margin-top: 15px;
+            width: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 12px 25px;
+        }
+        .save-tabs-section button:hover {
+            background-color: #5a6268;
         }
 
-        .notification.visible {
-            opacity: 1;
+        .warning-text {
+            color: var(--error-color);
+            font-size: 0.9em;
+            margin-top: 10px;
         }
 
-        /* Simple unicode icons for buttons (no external font needed) */
-        .icon {
-            font-style: normal;
-            font-family: 'Segoe UI Symbol', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
-            line-height: 1; /* Ensure consistent line-height for icons */
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #app {
+                padding: 25px;
+                margin: 15px;
+            }
+            h1 {
+                font-size: 2.2em;
+            }
+            h2 {
+                font-size: 1.6em;
+            }
+            h3 {
+                font-size: 1.3em;
+            }
+            #timer-value {
+                font-size: 3em;
+            }
+            .timer-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .timer-controls button {
+                width: 100%;
+            }
+            button {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+            .small-button {
+                padding: 8px 15px;
+                font-size: 0.85em;
+            }
         }
-        .icon-download::before { content: '↓'; }
-        .icon-copy::before { content: '❐'; } /* Unicode DOTTED SQUARE */
-        .icon-reset::before { content: '↻'; }
     </style>
 </head>
 <body>
-    <!-- The main text area for user input -->
-    <textarea id="clarityPad" autofocus placeholder="思考を書き出しましょう..."></textarea>
+    <div id="app">
+        <!-- Intro Screen -->
+        <div id="intro-screen" class="screen active">
+            <h1>Tab-Zen</h1>
+            <p>デジタルノイズから離脱し、集中力を高めるためのミニマルな空間。</p>
+            <p>作業中に気が散るタブを一時的に「非表示」にし、このクリーンな環境で思考を整理し、タスクに集中しましょう。</p>
+            <button id="enter-zen-mode">Tab-Zenモードを開始</button>
+            <div class="save-tabs-section">
+                <p>💡 後で開きたいURLがある場合は、ここに貼り付けて「一時保存」してください。Tab-Zenモード中に復元できます。</p>
+                <textarea id="manual-saved-urls" placeholder="各URLを新しい行に貼り付けてください (例:&#10;https://example.com/work-item-1&#10;https://example.com/research-paper)" rows="5"></textarea>
+                <button id="save-manual-urls">URLを一時保存</button>
+                <p id="saved-url-message" style="display: none; color: var(--primary-color); margin-top: 10px;"></p>
+            </div>
+        </div>
 
-    <!-- The "Gentle Prompt" display area -->
-    <div id="prompt" class="prompt"></div>
+        <!-- Zen Mode Screen -->
+        <div id="zen-screen" class="screen">
+            <header>
+                <h2>Tab-Zen: 集中モード</h2>
+                <button id="exit-zen-mode" class="small-button">Tab-Zenを終了</button>
+            </header>
 
-    <!-- The hidden controls bar at the bottom -->
-    <div id="controls" class="controls">
-        <button id="downloadBtn" class="control-button" title="ダウンロード (Ctrl/Cmd + S)">
-            <i class="icon icon-download"></i><span>ダウンロード</span>
-        </button>
-        <button id="copyBtn" class="control-button" title="クリップボードにコピー (Ctrl/Cmd + C)">
-            <i class="icon icon-copy"></i><span>コピー</span>
-        </button>
-        <button id="resetBtn" class="control-button" title="リセット (Ctrl/Cmd + R)">
-            <i class="icon icon-reset"></i><span>リセット</span>
-        </button>
+            <!-- Scratchpad -->
+            <section id="scratchpad-section" class="card">
+                <h3>思考スクラッチパッド</h3>
+                <textarea id="scratchpad" placeholder="ここに思考を自由に書き出してください... (セッション終了時に消去されます)" rows="10"></textarea>
+            </section>
+
+            <!-- Timer -->
+            <section id="timer-section" class="card">
+                <h3>フォーカスアシストタイマー</h3>
+                <div class="timer-display">
+                    <span id="timer-mode">作業中</span>
+                    <div id="timer-value">25:00</div>
+                </div>
+                <div class="timer-controls">
+                    <button id="start-timer">開始</button>
+                    <button id="pause-timer" disabled>一時停止</button>
+                    <button id="reset-timer" disabled>リセット</button>
+                </div>
+            </section>
+
+            <!-- Restore Tabs (Manual) -->
+            <section id="restore-tabs-section" class="card collapsible">
+                <h3 class="collapsible-header">一時保存したタブを復元 <span class="toggle-icon">▼</span></h3>
+                <div class="collapsible-content">
+                    <p>このTab-Zenを終了し、以前に一時保存したURLを開きます。</p>
+                    <textarea id="restore-urls-display" rows="5" readonly disabled></textarea>
+                    <button id="restore-manual-tabs" disabled>全てのタブを復元</button>
+                    <p class="warning-text" id="no-urls-to-restore" style="display: none;">復元するURLがありません。</p>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <!-- Notification display area -->
-    <div id="notification" class="notification"></div>
-
+    <audio id="notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-church-bell-single-strike-859.mp3" preload="auto"></audio>
     <script>
-        // DOM Element References
-        const clarityPad = document.getElementById('clarityPad');
-        const promptDiv = document.getElementById('prompt');
-        const controlsDiv = document.getElementById('controls');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const copyBtn = document.getElementById('copyBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const notificationDiv = document.getElementById('notification');
+        document.addEventListener('DOMContentLoaded', () => {
+            const introScreen = document.getElementById('intro-screen');
+            const zenScreen = document.getElementById('zen-screen');
+            const enterZenModeBtn = document.getElementById('enter-zen-mode');
+            const exitZenModeBtn = document.getElementById('exit-zen-mode');
 
-        // State Variables
-        let lastInputTime = Date.now();
-        let promptTimer;
-        let promptHideTimer;
-        let controlsHoverTimer;
-        let controlsAltKeyActive = false;
-        let controlsMouseActive = false;
+            // --- Feature 1: Manual Tab Save/Restore ---
+            const manualSavedUrlsTextarea = document.getElementById('manual-saved-urls');
+            const saveManualUrlsBtn = document.getElementById('save-manual-urls');
+            const savedUrlMessage = document.getElementById('saved-url-message');
+            const restoreUrlsDisplay = document.getElementById('restore-urls-display');
+            const restoreManualTabsBtn = document.getElementById('restore-manual-tabs');
+            const noUrlsToRestoreMessage = document.getElementById('no-urls-to-restore');
 
-        // List of prompts for "Gentle Assist"
-        const prompts = [
-            "なぜそう思う？",
-            "他にどんな選択肢がある？",
-            "もし友人にアドバイスするなら？",
-            "最終的にどうしたい？",
-            "この問題の根本原因は何だろう？",
-            "最も大切なことは何だろう？",
-            "次に取るべき行動は？",
-            "今感じていることは何？",
-            "良い点と悪い点を挙げてみよう",
-            "誰かに説明するなら、どう伝える？",
-            "もし制限が一切なかったら、どうする？",
-            "この思考を簡潔にまとめると？",
-            "一番気になっていることは？",
-            "その考えは、どんな感情から生まれている？",
-            "もし別の視点から見たら、どうだろう？",
-            "このアイデアの、具体的なメリットは？"
-        ];
-        let lastPromptIndex = -1; // To prevent showing the same prompt consecutively
+            let savedUrls = []; // Stores URLs manually entered by the user
+            const LOCAL_STORAGE_KEY = 'tabZenSavedUrls';
 
-        // --- Core Textarea Functionality ---
-        clarityPad.focus(); // Automatically focus on the textarea when loaded
-
-        // --- Gentle Prompt Assist Logic ---
-
-        // Starts the timer for displaying a prompt after inactivity
-        const startPromptTimer = () => {
-            clearTimeout(promptTimer); // Clear any existing timer
-            const delayInSeconds = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--prompt-delay'));
-            promptTimer = setTimeout(showPrompt, delayInSeconds * 1000);
-        };
-
-        // Immediately hides the currently displayed prompt
-        const hidePromptImmediately = () => {
-            clearTimeout(promptHideTimer); // Clear the hide timer if it's running
-            promptDiv.classList.remove('prompt-visible');
-        };
-
-        // Displays a random prompt
-        const showPrompt = () => {
-            clearTimeout(promptHideTimer);
-
-            let newPromptIndex;
-            // Select a random prompt, ensuring it's not the same as the last one if there are multiple prompts
-            do {
-                newPromptIndex = Math.floor(Math.random() * prompts.length);
-            } while (newPromptIndex === lastPromptIndex && prompts.length > 1);
-            lastPromptIndex = newPromptIndex;
-
-            promptDiv.textContent = prompts[newPromptIndex];
-            promptDiv.classList.add('prompt-visible'); // Trigger fade-in
-
-            // Set a timer to hide the prompt after its display duration
-            const displayTimeInSeconds = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--prompt-display-time'));
-            promptHideTimer = setTimeout(() => {
-                promptDiv.classList.remove('prompt-visible'); // Trigger fade-out
-            }, displayTimeInSeconds * 1000);
-        };
-
-        // Event listener to reset the prompt timer and hide prompt on any keydown
-        clarityPad.addEventListener('keydown', () => {
-            lastInputTime = Date.now(); // Update last input time
-            hidePromptImmediately();
-            startPromptTimer(); // Restart the inactivity timer
-        });
-
-        // Start the prompt timer when the app first loads
-        startPromptTimer();
-
-        // --- Controls Bar Display Logic (Mouse Hover / Alt Key) ---
-
-        // Shows the controls bar with an optional delay
-        const showControls = (delay = 0) => {
-            clearTimeout(controlsHoverTimer); // Clear any pending hide timer
-            controlsHoverTimer = setTimeout(() => {
-                controlsDiv.classList.add('controls-visible');
-            }, delay * 1000);
-        };
-
-        // Hides the controls bar with an optional delay, but only if neither Alt key nor mouse hover is active
-        const hideControls = (delay = 0) => {
-            clearTimeout(controlsHoverTimer); // Clear any pending show timer
-            controlsHoverTimer = setTimeout(() => {
-                if (!controlsAltKeyActive && !controlsMouseActive) {
-                    controlsDiv.classList.remove('controls-visible');
-                }
-            }, delay * 1000);
-        };
-
-        // Event listener for mouse movement to show/hide controls
-        document.addEventListener('mousemove', (e) => {
-            const bottomThreshold = 50; // Pixels from the bottom of the window to trigger controls
-            if (e.clientY > window.innerHeight - bottomThreshold) {
-                if (!controlsMouseActive) {
-                    controlsMouseActive = true;
-                    showControls(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--controls-show-delay')));
-                }
-            } else {
-                if (controlsMouseActive) {
-                    controlsMouseActive = false;
-                    hideControls(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--controls-hide-delay')));
+            // Load saved URLs from localStorage on init
+            function loadSavedUrls() {
+                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (stored) {
+                    savedUrls = JSON.parse(stored);
+                    updateRestoreDisplay();
                 }
             }
-        });
 
-        // Event listeners for Alt/Option key press to show/hide controls
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Alt' || e.key === 'Option') {
-                if (!controlsAltKeyActive) {
-                    controlsAltKeyActive = true;
-                    showControls(); // No delay when Alt key is pressed
+            // Update the display for restoring URLs
+            function updateRestoreDisplay() {
+                if (savedUrls.length > 0) {
+                    restoreUrlsDisplay.value = savedUrls.join('\n');
+                    restoreManualTabsBtn.disabled = false;
+                    noUrlsToRestoreMessage.style.display = 'none';
+                } else {
+                    restoreUrlsDisplay.value = '一時保存されたURLはありません。';
+                    restoreManualTabsBtn.disabled = true;
+                    noUrlsToRestoreMessage.style.display = 'block';
                 }
             }
-        });
 
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Alt' || e.key === 'Option') {
-                controlsAltKeyActive = false;
-                hideControls(); // Hide without delay when Alt key is released
-            }
-        });
+            // Save URLs from the textarea
+            saveManualUrlsBtn.addEventListener('click', () => {
+                const inputUrls = manualSavedUrlsTextarea.value.split('\n')
+                                    .map(url => url.trim())
+                                    .filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
 
-        // --- Export & Reset Functionality ---
+                if (inputUrls.length > 0) {
+                    savedUrls = inputUrls;
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(savedUrls));
+                    savedUrlMessage.textContent = `${savedUrls.length} 件のURLを一時保存しました！`;
+                    savedUrlMessage.style.display = 'block';
+                    setTimeout(() => savedUrlMessage.style.display = 'none', 3000); // Hide after 3 seconds
+                    manualSavedUrlsTextarea.value = ''; // Clear input after saving
+                    updateRestoreDisplay(); // Update display for Zen mode
+                } else {
+                    savedUrlMessage.textContent = '有効なURLが入力されていません。';
+                    savedUrlMessage.style.color = 'var(--error-color)';
+                    savedUrlMessage.style.display = 'block';
+                    setTimeout(() => {
+                        savedUrlMessage.style.display = 'none';
+                        savedUrlMessage.style.color = 'var(--primary-color)'; // Reset color
+                    }, 3000);
+                }
+            });
 
-        // Downloads the textarea content as a .txt file
-        const downloadText = () => {
-            const text = clarityPad.value;
-            if (!text.trim()) { // Check for actual content, ignoring whitespace
-                showNotification('ダウンロードする内容がありません。');
-                return;
-            }
+            // Restore URLs by opening them in new tabs
+            restoreManualTabsBtn.addEventListener('click', () => {
+                if (savedUrls.length > 0) {
+                    const confirmRestore = confirm('一時保存されたタブを復元しますか？現在のTab-Zenタブは閉じられます。');
+                    if (confirmRestore) {
+                        savedUrls.forEach(url => {
+                            window.open(url, '_blank');
+                        });
+                        localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear saved URLs after restoring
+                        savedUrls = []; // Clear local array
+                        updateRestoreDisplay(); // Update display to show no URLs
+                        window.close(); // Close the Tab-Zen tab (might be blocked by browser)
+                    }
+                }
+            });
 
-            // Generate filename with current date and time
-            const date = new Date();
-            const pad = (num) => num.toString().padStart(2, '0');
-            const filename = `ClarityPad_${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}.txt`;
+            // Collapsible "Restore Tabs" section
+            const collapsibleHeader = document.querySelector('#restore-tabs-section .collapsible-header');
+            const collapsibleContent = document.querySelector('#restore-tabs-section .collapsible-content');
+            const restoreTabsSection = document.getElementById('restore-tabs-section');
 
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click(); // Programmatically click the link to start download
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url); // Clean up the object URL
-            showNotification('ダウンロードしました！');
-        };
+            collapsibleHeader.addEventListener('click', () => {
+                restoreTabsSection.classList.toggle('expanded');
+                if (restoreTabsSection.classList.contains('expanded')) {
+                    collapsibleContent.style.maxHeight = collapsibleContent.scrollHeight + 'px';
+                } else {
+                    collapsibleContent.style.maxHeight = '0';
+                }
+            });
 
-        // Copies the textarea content to the clipboard
-        const copyText = async () => {
-            const text = clarityPad.value;
-            if (!text.trim()) { // Check for actual content, ignoring whitespace
-                showNotification('コピーする内容がありません。');
-                return;
-            }
-            try {
-                await navigator.clipboard.writeText(text);
-                showNotification('クリップボードにコピーしました！');
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-                showNotification('コピーに失敗しました。');
-            }
-        };
+            // --- UI State Management (Intro vs Zen Mode) ---
+            enterZenModeBtn.addEventListener('click', () => {
+                introScreen.classList.remove('active');
+                zenScreen.classList.add('active');
+                updateRestoreDisplay(); // Ensure restore display is updated when entering Zen mode
+            });
 
-        // Resets (clears) the textarea content
-        const resetPad = () => {
-            if (!clarityPad.value.trim()) { // Check if already empty
-                showNotification('パッドはすでに空です。');
-                return;
-            }
-            // Ask for confirmation to prevent accidental data loss
-            if (confirm('現在の内容を全てクリアしますか？この操作は元に戻せません。')) {
-                clarityPad.value = '';
-                showNotification('パッドをリセットしました。');
-                lastInputTime = Date.now(); // Reset input time to potentially trigger a prompt sooner
-                startPromptTimer(); // Restart prompt timer for fresh start
-            }
-        };
+            exitZenModeBtn.addEventListener('click', () => {
+                const confirmExit = confirm('Tab-Zenを終了しますか？思考スクラッチパッドの内容は失われます。');
+                if (confirmExit) {
+                    introScreen.classList.add('active');
+                    zenScreen.classList.remove('active');
+                    scratchpad.value = ''; // Clear scratchpad on exit
+                    resetTimer(); // Reset timer on exit, too
+                }
+            });
 
-        // Attach event listeners to control buttons
-        downloadBtn.addEventListener('click', downloadText);
-        copyBtn.addEventListener('click', copyText);
-        resetBtn.addEventListener('click', resetPad);
 
-        // --- Keyboard Shortcuts ---
-        document.addEventListener('keydown', (e) => {
-            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-            const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey; // Detect Cmd key on Mac, Ctrl on others
+            // --- Feature 2: Scratchpad ---
+            const scratchpad = document.getElementById('scratchpad');
+            const SCRATCHPAD_KEY = 'tabZenScratchpad';
 
-            if (isCtrlOrCmd) {
-                switch (e.key.toLowerCase()) {
-                    case 's': // Ctrl/Cmd + S for Save/Download
-                        e.preventDefault(); // Prevent browser's default save dialog
-                        downloadText();
-                        break;
-                    case 'c': // Ctrl/Cmd + C for Copy (only if no text is selected)
-                        // If no text is selected in the textarea, our shortcut copies all content.
-                        // If text IS selected, we let the browser's default copy behavior (copy selected text) prevail for better UX.
-                        if (clarityPad.selectionStart === clarityPad.selectionEnd) {
-                            e.preventDefault();
-                            copyText();
-                        }
-                        break;
-                    case 'r': // Ctrl/Cmd + R for Reset
-                        e.preventDefault(); // Prevent browser's default reload
-                        resetPad();
-                        break;
+            // Load scratchpad content from sessionStorage on init
+            function loadScratchpad() {
+                const savedContent = sessionStorage.getItem(SCRATCHPAD_KEY);
+                if (savedContent) {
+                    scratchpad.value = savedContent;
                 }
             }
-        });
 
-        // --- Notification Display Logic ---
-        let notificationTimer;
-        const showNotification = (message) => {
-            clearTimeout(notificationTimer);
-            notificationDiv.textContent = message;
-            notificationDiv.classList.add('visible');
-            notificationTimer = setTimeout(() => {
-                notificationDiv.classList.remove('visible');
-            }, 3000); // Notification visible for 3 seconds
-        };
+            // Save scratchpad content to sessionStorage on input
+            scratchpad.addEventListener('input', () => {
+                sessionStorage.setItem(SCRATCHPAD_KEY, scratchpad.value);
+            });
 
-        // --- Browser `beforeunload` Warning ---
-        // Prompts the user before leaving the page if there is unsaved content
-        window.addEventListener('beforeunload', (e) => {
-            if (clarityPad.value.trim() !== '') {
-                e.preventDefault(); // Standard way to trigger browser's "Are you sure you want to leave?" warning
-                e.returnValue = ''; // Required for older browsers to display the prompt
+            // --- Feature 3: Focus Assist Timer ---
+            const timerValueDisplay = document.getElementById('timer-value');
+            const timerModeDisplay = document.getElementById('timer-mode');
+            const timerDisplayContainer = document.querySelector('.timer-display');
+            const startTimerBtn = document.getElementById('start-timer');
+            const pauseTimerBtn = document.getElementById('pause-timer');
+            const resetTimerBtn = document.getElementById('reset-timer');
+            const notificationSound = document.getElementById('notification-sound');
+
+            let timerInterval;
+            let totalSeconds;
+            let isRunning = false;
+            let currentMode = 'work'; // 'work', 'break', 'long-break'
+            let workCycles = 0;
+
+            const WORK_TIME = 25 * 60; // 25 minutes
+            const BREAK_TIME = 5 * 60;  // 5 minutes
+            const LONG_BREAK_TIME = 15 * 60; // 15 minutes
+            const CYCLES_BEFORE_LONG_BREAK = 4;
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
             }
+
+            function updateTimerDisplay() {
+                timerValueDisplay.textContent = formatTime(totalSeconds);
+                timerModeDisplay.textContent =
+                    currentMode === 'work' ? '作業中' :
+                    currentMode === 'break' ? '休憩中' :
+                    '長休憩中';
+
+                // Update visual styling based on mode
+                timerDisplayContainer.classList.remove('working', 'breaking', 'long-breaking');
+                timerDisplayContainer.classList.add(
+                    currentMode === 'work' ? 'working' :
+                    currentMode === 'break' ? 'breaking' :
+                    'long-breaking'
+                );
+            }
+
+            function startTimer() {
+                if (isRunning) return;
+                isRunning = true;
+                startTimerBtn.disabled = true;
+                pauseTimerBtn.disabled = false;
+                resetTimerBtn.disabled = false;
+
+                timerInterval = setInterval(() => {
+                    totalSeconds--;
+                    updateTimerDisplay();
+
+                    if (totalSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        notificationSound.play();
+                        setTimeout(() => { // Small delay before switching mode
+                            switchMode();
+                            startTimer(); // Auto-start next mode
+                        }, 1000); // 1 second delay
+                    }
+                }, 1000);
+            }
+
+            function pauseTimer() {
+                if (!isRunning) return;
+                isRunning = false;
+                clearInterval(timerInterval);
+                startTimerBtn.disabled = false;
+                pauseTimerBtn.disabled = true;
+            }
+
+            function resetTimer() {
+                pauseTimer(); // Stop timer if running
+                isRunning = false; // Ensure isRunning is false
+                currentMode = 'work';
+                workCycles = 0;
+                totalSeconds = WORK_TIME;
+                updateTimerDisplay();
+                startTimerBtn.disabled = false;
+                pauseTimerBtn.disabled = true;
+                resetTimerBtn.disabled = true;
+            }
+
+            function switchMode() {
+                if (currentMode === 'work') {
+                    workCycles++;
+                    if (workCycles % CYCLES_BEFORE_LONG_BREAK === 0) {
+                        currentMode = 'long-break';
+                        totalSeconds = LONG_BREAK_TIME;
+                    } else {
+                        currentMode = 'break';
+                        totalSeconds = BREAK_TIME;
+                    }
+                } else { // 'break' or 'long-break'
+                    currentMode = 'work';
+                    totalSeconds = WORK_TIME;
+                }
+                updateTimerDisplay();
+            }
+
+            // Initialize timer display
+            resetTimer();
+
+            // Event Listeners for Timer
+            startTimerBtn.addEventListener('click', startTimer);
+            pauseTimerBtn.addEventListener('click', pauseTimer);
+            resetTimerBtn.addEventListener('click', resetTimer);
+
+            // Initial loads
+            loadSavedUrls();
+            loadScratchpad();
         });
     </script>
 </body>
