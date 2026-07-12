@@ -3,7 +3,7 @@ import json
 import glob
 from datetime import datetime, timedelta, timezone
 from crewai import Agent, Crew, Process, Task
-# 🔥 無料枠防衛のために LangChain の Gemini クライアントを明示的にインポート
+# 🔥 LangChain の Gemini クライアントを明示的にインポート
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # --- ⚙️ タイムゾーンと日付の設定 ---
@@ -62,25 +62,25 @@ def save_state(state):
 state = load_state()
 
 
-# --- 🛡️ Gemini LLM の明示的定義（無料枠防衛・自動リトライの核） ---
-# 文字列指定からオブジェクト指定に変更。これで429エラーが出ても、AIが勝手に「お茶を濁して待機」するようになります。
+# --- 🛡️ Gemini LLM の明示的定義（無料枠防衛・要塞化） ---
+# 429エラーが発生しても、システムを落とさずに最大15回まで自動待機リトライを繰り返します。
 gemini_llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    max_retries=10,        # 🔥 429エラーを検知したら、自動で指数バックオフ（徐々に待機時間を伸ばす）で最大10回粘り強くリトライする
-    temperature=0.3,       # アプリ開発・コード生成の正確性を高めるため、ランダム性を少し抑えめに調整
+    max_retries=15,        # 🔥 429エラー検知時のリトライ回数を「15回」に強化（20秒の壁を確実に超える）
+    temperature=0.3,       # アプリ開発・コード生成の正確性を担保
 )
 
 
 # --- 💻 アプリ開発部のAIスペシャリスト（エージェント定義） ---
-# 各エージェントに最適化した gemini_llm を配備し、さらに個別に max_rpm を設定して二重のブレーキをかけます。
+# 各エージェントに最強シールドの gemini_llm を配備し、個別速度を厳しく制限
 
 dev_pm = Agent(
     role="アプリ開発総括 PM 兼 COO",
     goal="インプットされた仕様書と既存のDartコードを紐解き、ストア申請に向けて毎日1つずつ確実に機能を完成させる",
     backstory="プロジェクト全体の進捗を管理する敏腕マネージャー。提供された仕様書や専門知識のテキストを熟読し、本日開発すべき最優先タスクを1つに絞り込むプロ。",
     verbose=True,
-    llm=gemini_llm,        # 🔥 最適化したLLMをセット
-    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限（無料枠の上限20を絶対に踏まない安全圏）
+    llm=gemini_llm,        # 🔓 シールドLLMをセット
+    max_rpm=3,             # 🔥 個別リクエスト数を1分間3回に厳格化（無料枠の15RPM制限を絶対に踏まない安全圏）
 )
 
 flutter_engineer = Agent(
@@ -88,8 +88,8 @@ flutter_engineer = Agent(
     goal="PMの指示に基づき、地質調査技士アプリの.dartファイルや.json設定ファイルを拡張・修正・新規作成する",
     backstory="FlutterとDart言語の申し子。仕様書に記載された機能や、ボーリングポケットブックの専門ナレッジを、バグのないクリーンなソースコードとしてガシガシ実装する技術者。",
     verbose=True,
-    llm=gemini_llm,        # 🔥 最適化したLLMをセット
-    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限
+    llm=gemini_llm,        # 🔓 シールドLLMをセット
+    max_rpm=3,             # 🔥 個別リクエスト数を1分間3回に制限
 )
 
 store_qa_specialist = Agent(
@@ -97,8 +97,8 @@ store_qa_specialist = Agent(
     goal="書かれたコードが仕様書および専門知識の要件を満たしているか、またApple/Googleのストア審査を突破できる構成かを検証する",
     backstory="数々のアプリをストアに一発合格させてきた品質の鬼。専門用語のロジックに間違いがないか、規約違反がないかを厳しくテストし、本日の成果物を最終承認する砦。",
     verbose=True,
-    llm=gemini_llm,        # 🔥 最適化したLLMをセット
-    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限
+    llm=gemini_llm,        # 🔓 シールドLLMをセット
+    max_rpm=3,             # 🔥 個別リクエスト数を1分間3回に制限
 )
 
 # --- 🚀 タスクの定義（インプットされた仕様書・知識を直接埋め込む） ---
@@ -108,7 +108,7 @@ task1 = Task(
 【最重要：会長から支給された仕様書および専門ナレッジ】
 {shared_knowledge_base}
 
-上記の仕様書、およびリポジトリ内にある既存のDartコードを確認してください。
+上記の仕様書、およびリポジトリ内にある既存のでDartコードを確認してください。
 現在の開発ステート（{state['current_phase']}）を踏まえ、本日開発・修正すべき『具体的なFlutterの1画面、または1つのバックエンドロジック』を厳選して決定し、エンジニアに指示を出してください。
 """,
     expected_output="本日の詳細な開発仕様指示書",
@@ -135,7 +135,7 @@ dev_crew = Crew(
     tasks=tasks,
     process=Process.sequential,
     verbose=True,
-    max_rpm=8  # 🔥 クルー全体でも1分間に最大8リクエストに制限を強化
+    max_rpm=4  # 🔥 クルー全体での1分間リクエスト数を4回に制限。これで単体パンクのリスクが0になります。
 )
 
 print(f"📱 [ai-company] {state['current_app']} の自律開発を開始します。")
