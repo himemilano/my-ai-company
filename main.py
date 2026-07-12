@@ -3,6 +3,8 @@ import json
 import glob
 from datetime import datetime, timedelta, timezone
 from crewai import Agent, Crew, Process, Task
+# 🔥 無料枠防衛のために LangChain の Gemini クライアントを明示的にインポート
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # --- ⚙️ タイムゾーンと日付の設定 ---
 jst = timezone(timedelta(hours=9))
@@ -59,14 +61,26 @@ def save_state(state):
 
 state = load_state()
 
+
+# --- 🛡️ Gemini LLM の明示的定義（無料枠防衛・自動リトライの核） ---
+# 文字列指定からオブジェクト指定に変更。これで429エラーが出ても、AIが勝手に「お茶を濁して待機」するようになります。
+gemini_llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    max_retries=10,        # 🔥 429エラーを検知したら、自動で指数バックオフ（徐々に待機時間を伸ばす）で最大10回粘り強くリトライする
+    temperature=0.3,       # アプリ開発・コード生成の正確性を高めるため、ランダム性を少し抑えめに調整
+)
+
+
 # --- 💻 アプリ開発部のAIスペシャリスト（エージェント定義） ---
+# 各エージェントに最適化した gemini_llm を配備し、さらに個別に max_rpm を設定して二重のブレーキをかけます。
 
 dev_pm = Agent(
     role="アプリ開発総括 PM 兼 COO",
     goal="インプットされた仕様書と既存のDartコードを紐解き、ストア申請に向けて毎日1つずつ確実に機能を完成させる",
     backstory="プロジェクト全体の進捗を管理する敏腕マネージャー。提供された仕様書や専門知識のテキストを熟読し、本日開発すべき最優先タスクを1つに絞り込むプロ。",
     verbose=True,
-    llm="gemini/gemini-2.5-flash",
+    llm=gemini_llm,        # 🔥 最適化したLLMをセット
+    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限（無料枠の上限20を絶対に踏まない安全圏）
 )
 
 flutter_engineer = Agent(
@@ -74,7 +88,8 @@ flutter_engineer = Agent(
     goal="PMの指示に基づき、地質調査技士アプリの.dartファイルや.json設定ファイルを拡張・修正・新規作成する",
     backstory="FlutterとDart言語の申し子。仕様書に記載された機能や、ボーリングポケットブックの専門ナレッジを、バグのないクリーンなソースコードとしてガシガシ実装する技術者。",
     verbose=True,
-    llm="gemini/gemini-2.5-flash",
+    llm=gemini_llm,        # 🔥 最適化したLLMをセット
+    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限
 )
 
 store_qa_specialist = Agent(
@@ -82,7 +97,8 @@ store_qa_specialist = Agent(
     goal="書かれたコードが仕様書および専門知識の要件を満たしているか、またApple/Googleのストア審査を突破できる構成かを検証する",
     backstory="数々のアプリをストアに一発合格させてきた品質の鬼。専門用語のロジックに間違いがないか、規約違反がないかを厳しくテストし、本日の成果物を最終承認する砦。",
     verbose=True,
-    llm="gemini/gemini-2.5-flash",
+    llm=gemini_llm,        # 🔥 最適化したLLMをセット
+    max_rpm=5,             # 🔥 1分間の最大リクエスト数を5回に制限
 )
 
 # --- 🚀 タスクの定義（インプットされた仕様書・知識を直接埋め込む） ---
@@ -119,7 +135,7 @@ dev_crew = Crew(
     tasks=tasks,
     process=Process.sequential,
     verbose=True,
-    max_rpm=10
+    max_rpm=8  # 🔥 クルー全体でも1分間に最大8リクエストに制限を強化
 )
 
 print(f"📱 [ai-company] {state['current_app']} の自律開発を開始します。")
