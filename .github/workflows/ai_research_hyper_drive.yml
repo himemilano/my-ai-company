@@ -1,0 +1,38 @@
+name: 🤖 AI Research Hyper-Drive Loop
+
+on:
+  schedule:
+    # 毎時0分に起動して常時コンテナを稼働
+    - cron: '0 * * * *'
+  workflow_dispatch: # 手動即時起動ボタン
+
+permissions:
+  contents: write # 研究成果物やレポートをGitHubへ自動コミットする権限
+
+jobs:
+  run-ai-limitless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # 最大約6時間のコンテナ維持限界
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    # 🤖 AI自律研究ループランナーの実行
+    - name: Run AI Research Loop Agent
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_FX }}
+      run: |
+        echo "=== 🤖 AI R&D自律研究ハイパードライブ 起動 ==="
+        python ai_loop_runner.py
+
