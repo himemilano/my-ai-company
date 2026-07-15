@@ -2,17 +2,40 @@ import os
 import sys
 import time
 import subprocess
+import atexit
 from datetime import datetime, timedelta, timezone
 
-# 日本時間設定
-jst = timezone(timedelta(hours=9))
+# ==========================================================
+# 🗝️ 多重起動防止（ロックファイル）管理
+# ==========================================================
+LOCK_FILE = ".loop.lock"
 
-# 実行ターゲット：トップ階層にある実行スクリプト（お使いのファイル名に合わせて自由に変更可能です）
-# デフォルトで一般的に使われる main.py や research.py などを順次自動実行する設定にしています。
-SCRIPTS_TO_RUN = [
-    "main.py",
-    # "research.py", # もしトップ階層に他のスクリプトがあればコメントを外して追加可能
-]
+def acquire_lock():
+    if os.path.exists(LOCK_FILE):
+        print(f"⚠️ [重複防止] 前回のループ処理がまだ実行中です。({LOCK_FILE} が存在します)")
+        print("今回のジョブは多重起動を防ぐために安全に即時終了します。")
+        sys.exit(0)
+    
+    with open(LOCK_FILE, "w") as f:
+        f.write(str(os.getpid()))
+    print(f"🔑 [ロック取得] ロックファイルを確保しました (PID: {os.getpid()})")
+
+def release_lock():
+    if os.path.exists(LOCK_FILE):
+        try:
+            os.remove(LOCK_FILE)
+            print("🔓 [ロック解除] ロックファイルを削除しました。")
+        except Exception as e:
+            print(f"⚠️ ロックファイル削除失敗: {e}")
+
+# エラー強制終了時も確実に鍵を返却する
+atexit.register(release_lock)
+
+# ==========================================================
+# 🤖 メイン自律ループ処理
+# ==========================================================
+jst = timezone(timedelta(hours=9))
+SCRIPTS_TO_RUN = ["main.py"]
 
 # APIリミットセーフガード (1分間の最大リクエスト数12回：約5秒に1回の間隔)
 MAX_REQUESTS_PER_MINUTE = 12
@@ -20,7 +43,7 @@ REQUEST_INTERVAL = 60 / MAX_REQUESTS_PER_MINUTE
 
 def run_script_safely(script_path):
     if not os.path.exists(script_path):
-        print(f"💡 スキップ: {script_path} はまだリポジトリ内に存在しません。必要に応じてファイルを設置してください。")
+        print(f"💡 スキップ: {script_path} はまだリポジトリ内に存在しません。")
         return False
         
     current_time = datetime.now(jst).strftime("%H:%M:%S")
@@ -28,17 +51,17 @@ def run_script_safely(script_path):
     
     start_time = time.time()
     try:
-        # プロセスとしてR&Dスクリプトを順次起動
+        # pipで確実に入っている同一Python環境の仮想インタプリタで実行
         result = subprocess.run([sys.executable, script_path], capture_output=True, text=True, timeout=300)
         
-        print(result.stdout)
+        if result.stdout:
+            print(result.stdout)
         if result.stderr:
-            print(f"❌ エラー出力:\n{result.stderr}")
+            print(f"⚠️ 実行ログ/エラー出力:\n{result.stderr}")
             
         elapsed = time.time() - start_time
         print(f"⏱️ 完了 (処理時間: {elapsed:.1f}秒)")
         
-        # API保護待機
         time.sleep(REQUEST_INTERVAL)
         return True
     except subprocess.TimeoutExpired:
@@ -54,7 +77,8 @@ def main():
     print("==========================================================")
     
     loop_start_time = time.time()
-    max_loop_duration = 5 * 60 * 60 + 40 * 60 # 5時間40分間、常時コンテナ内でループを実行
+    # 5時間40分間、常時コンテナ内でループを実行
+    max_loop_duration = 5 * 60 * 60 + 40 * 60 
     
     run_count = 0
     while True:
@@ -66,14 +90,12 @@ def main():
         run_count += 1
         print(f"\n--- 🤖 第 {run_count} 回目の AI Research 自律ループ ---")
         
-        # 登録スクリプトを順に実行
         for script in SCRIPTS_TO_RUN:
             run_script_safely(script)
             
-        # 1サイクル完了ごとに15秒待機
         time.sleep(15)
         
-        # 生成された研究結果のレポートや分析ファイルを自動で検知してGitHubへプッシュ
+        # 成果物の自動コミット＆プッシュ処理
         try:
             subprocess.run(["git", "config", "--local", "user.email", "action@github.com"], capture_output=True)
             subprocess.run(["git", "config", "--local", "user.name", "GitHub Action"], capture_output=True)
@@ -88,5 +110,5 @@ def main():
             print(f"⚠️ 自動コミット例外: {e}")
 
 if __name__ == "__main__":
+    acquire_lock()
     main()
-
