@@ -1,13 +1,13 @@
 name: 🤖 AI Research Hyper-Drive Loop
 
-# === 🛡️ ここが「待機なし・即時弾き」の最強設定 🛡️ ===
+# 古いジョブが動いていれば、新しいジョブは待機（渋滞）させずにその場で即時キャンセル（弾く）
 concurrency:
-  group: ${{ github.workflow }} # このワークフロー単位で競合を監視
-  cancel-in-progress: false     # 実行中の古いジョブ（執筆中）を絶対に殺さない！
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 on:
   schedule:
-    - cron: '0 * * * *' # 毎時0分
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 350
 
-    # 実行中だったらこのジョブ自体をスキップさせる制御
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -28,15 +27,17 @@ jobs:
       with:
         python-version: '3.11'
 
+    # 🚀 ここで起動する「毎回のコンテナ」に対し、プログラム実行前にcrewaiを含む必要環境を100%確実にデプロイします
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests google-generativeai
+        pip install requests google-generativeai crewai langchain-google-genai pydantic
 
     - name: Run AI Research Loop Agent
       env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # 各リポジトリの正しいキー名に合わせてください
+        # Secretsに登録されている実際のAPIキー名に合わせてください
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
-        echo "=== 🤖 自律研究ハイパードライブ 起動 ==="
+        echo "=== 🤖 AI R&D自律研究ハイパードライブ 起動 ==="
         python ai_loop_runner.py
