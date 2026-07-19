@@ -1,1 +1,6 @@
-
+# 🚫 Flutterのビルド成果物をGit管理から完全に除外
+/geo_master_app/build/
+/geo_master_app/.dart_tool/
+/geo_master_app/.packages
+/geo_master_app/.flutter-plugins
+/geo_master_app/.flutter-plugins-dependencies
