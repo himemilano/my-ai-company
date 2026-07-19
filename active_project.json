@@ -1,1 +1,5 @@
-active_project.json
+{
+    "current_project_id": "01_geo_master",
+    "project_title": "地質調査技士試験対策アプリ",
+    "project_root": "projects/01_geo_master"
+}
