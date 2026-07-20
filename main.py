@@ -14,8 +14,8 @@ current_date = now.strftime("%Y-%m-%d")
 print("🚀 [ai-company] 自律クローラー内蔵・メインエンジンを起動します...")
 
 # 🛡️ 環境変数 'GEMINI_API_KEY' の存在チェック
-if not os.environ.get("GEMINI_API_KEY"):
-    print("\n❌ [致命的エラー] 環境変数 'GEMINI_API_KEY' が設定されていません！")
+if not os.environ.get("GEMINI_API_KEY_MY_AI"):
+    print("\n❌ [致命的エラー] 環境変数 'GEMINI_API_KEY_MY_AI' が設定されていません！")
     sys.exit(1)
 
 # 🎛️ プロジェクト切り替え盤の読み込み
