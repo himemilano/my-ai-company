@@ -30,8 +30,8 @@ jobs:
 
     - name: Run AI App Development
       env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GEMINI_API_KEY_MY_AI: ${{ secrets.GEMINI_API_KEY_MY_AI }}
+        API_KEY: ${{ secrets.GEMINI_API_KEY_MY_AI }}
       run: python main.py
 
     - name: Commit and Push Code Progress
