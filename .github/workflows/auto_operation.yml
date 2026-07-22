@@ -30,11 +30,14 @@ jobs:
 
     - name: Run AI App Development
       env:
+        # 🛡️ main.py の環境変数存在チェックを通すため
         GEMINI_API_KEY_MY_AI: ${{ secrets.GEMINI_API_KEY_MY_AI }}
+        # 🔑 CrewAI / LangChain などの内部ライブラリが要求する標準名称
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_MY_AI }}
       run: python main.py
 
     - name: Commit and Push Code Progress
-      # ✨ main.pyが sys.exit(1) で緊急停止した場合は、このコミット処理は走らずに安全にストップします
+      # ✨ main.py が sys.exit(1) で緊急停止した場合は、このコミット処理は走らずに安全にストップします
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
